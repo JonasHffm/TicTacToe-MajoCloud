@@ -12,14 +12,19 @@ import java.util.*;
 public class CloudServer extends Thread{
 
     private ServerSocket server;
-    private Map<CloudClient, String> client_list;
     private String UID = UUID.randomUUID().toString();
     private Timer timer;
-    private boolean stoped = false;
-    private ServerHandler serverHandler;
-    private boolean proxyMode = false;
-    private CloudServer instance;
+
+    private Map<CloudClient, String> client_list;
+    private String turn = "";
     private final int MAX_CLIENT_ACCEPTION = 2;
+
+    private boolean stoped = false;
+
+    private ServerHandler serverHandler;
+    private CloudServer instance;
+
+    private boolean proxyMode = false;
     private int port;
     private String motd = "Welcome to the server!";
 
@@ -192,6 +197,13 @@ public class CloudServer extends Thread{
 
     public boolean isWon() {
         return won;
+    }
+
+    public void setTurn(String turn) {
+        this.turn = turn;
+    }
+    public String getTurn() {
+        return turn;
     }
 
     public void enableProxyMode() {

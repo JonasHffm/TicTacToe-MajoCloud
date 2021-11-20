@@ -12,6 +12,7 @@ import org.json.simple.parser.ParseException;
 import java.io.*;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.Random;
 
 public class CloudClient extends Thread{
 
@@ -142,6 +143,7 @@ public class CloudClient extends Thread{
                 jsonArrayUser.addAll(cloudServer.getClient_list().values());
                 jsonObject.put("user", jsonArrayUser);
                 jsonObject.put("won", cloudServer.isWon());
+                jsonObject.put("turn", cloudServer.getTurn());
                 dataStorageMap.put("PacketInfoGamestate", jsonObject.toJSONString());
             }
         }
@@ -159,6 +161,10 @@ public class CloudClient extends Thread{
                     String username = (String) jsonObject.get("username");
                     System.out.println(" > New client registered as -> " + username + " > [" + cloudServer.getPort() + "]");
                     cloudServer.getClient_list().put(this, username);
+                    this.username = username;
+                    if(cloudServer.getClient_list().size() >= 2) {
+                        cloudServer.setTurn((String) cloudServer.getClient_list().values().toArray()[new Random().nextInt(2)]);
+                    }
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }

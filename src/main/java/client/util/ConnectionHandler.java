@@ -105,7 +105,7 @@ public class ConnectionHandler {
                     if(play_socket != null) {
                         if (play_socket.isConnected()) {
                             try {
-                                writer.write(" \n");
+                                writer.write("PacketPlayOutChangeGame;;;REQUESTINFO\n");
                                 writer.flush();
 
                                 String message = reader.readLine();
