@@ -1,6 +1,7 @@
 package client.util;
 
 
+import client.main.Client;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -16,6 +17,8 @@ public class ConnectionHandler {
 
     private Socket proxy_socket;
     private Socket play_socket;
+
+    private PlayserverInfoState playserverInfoState;
 
     private Thread listeningProxy, listeningPlayServer;
 
@@ -109,7 +112,7 @@ public class ConnectionHandler {
                                 writer.flush();
 
                                 String message = reader.readLine();
-                                JSONParser jsonParser = new JSONParser();
+                                parsePacketData(message);
                                 System.out.println(message);
 
                             } catch (IOException e) {
@@ -167,8 +170,41 @@ public class ConnectionHandler {
     public Runnable getOnListenEventPlayServer() {
         return onListenEventPlayServer;
     }
-
     public void setOnListenEventPlayServer(Runnable onListenEventPlayServer) {
         this.onListenEventPlayServer = onListenEventPlayServer;
+    }
+
+    public PlayserverInfoState getPlayserverInfoState() {
+        return playserverInfoState;
+    }
+
+    public void setPlayserverInfoState(PlayserverInfoState playserverInfoState) {
+        this.playserverInfoState = playserverInfoState;
+    }
+
+    public void parsePacketData(String packet) {
+        JSONParser jsonParser = new JSONParser();
+
+        if(packet.startsWith("PacketInfoGamestate;;;")) {
+            String jsonStr = packet.split(";;;")[1];
+            try {
+                JSONObject object = (JSONObject) jsonParser.parse(jsonStr);
+                PlayserverInfoState playserverInfoState = Client.data.getConnectionHandler().getPlayserverInfoState();
+                playserverInfoState.setField((JSONArray)object.get("gamefield"));
+                playserverInfoState.setTurn((String) object.get("turn"));
+                playserverInfoState.setUser((JSONArray)object.get("user"));
+                playserverInfoState.setWon((Boolean) object.get("won"));
+                if(playserverInfoState.getUser().size() == 2) {
+                    playserverInfoState.getPlayerSymbols().put(playserverInfoState.getUser().get(0)
+                            , (String) object.get(playserverInfoState.getUser().get(0)));
+                    playserverInfoState.getPlayerSymbols().put(playserverInfoState.getUser().get(1)
+                            , (String) object.get(playserverInfoState.getUser().get(1)));
+                }else {
+                    playserverInfoState.getPlayerSymbols().clear();
+                }
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

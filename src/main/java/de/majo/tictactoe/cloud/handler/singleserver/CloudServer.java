@@ -206,6 +206,10 @@ public class CloudServer extends Thread{
         return turn;
     }
 
+    public void setGameField(List<String> gameField) {
+        this.gameField = gameField;
+    }
+
     public void enableProxyMode() {
         UID = "proxy";
         proxyMode = true;

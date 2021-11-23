@@ -2,7 +2,10 @@ package client.gui;
 
 import client.main.Client;
 import client.util.Data;
+import client.util.PlayserverInfoState;
 import client.util.ProxyData;
+import client.util.Server;
+import de.majo.tictactoe.cloud.handler.singleserver.CloudServer;
 import org.json.simple.JSONObject;
 
 import java.awt.Color;
@@ -25,6 +28,7 @@ public class MainGUI {
     private JFrame frame;
     public static JTextField input_username;
     private ProxyData proxyData;
+    private int playersplaying = 0;
 
     private JLabel lbl_motd, lbl_playersplaying, lbl_playersonline, lbl_port;
     private DefaultListModel<String> defaultListModel;
@@ -92,7 +96,6 @@ public class MainGUI {
                             Client.data.getConnectionHandler().setPlay_socket(socket);
                             Data.username = input_username.getText();
                             Data.alreadyConnected = true;
-                            Client.data.getConnectionHandler().getListeningPlayServer().start();
 
                             new Timer().schedule(new TimerTask() {
                                 @Override
@@ -108,6 +111,14 @@ public class MainGUI {
                                     }
                                 }
                             }, 1000);
+
+                            Client.data.getConnectionHandler().setPlayserverInfoState(new PlayserverInfoState());
+
+                            if(!Client.data.getConnectionHandler().getListeningPlayServer().isAlive()) {
+                                Client.data.getConnectionHandler()
+                                        .getListeningPlayServer()
+                                        .start();
+                            }
 
                             GameGUI gameGUI = new GameGUI();
                         } catch (IOException ioException) {
@@ -138,7 +149,7 @@ public class MainGUI {
         btn_connect.setBounds(19, 299, 117, 29);
 
         JLabel lblNewLabel_2 = new JLabel("Proxy-Information");
-        lblNewLabel_2.setBounds(19, 359, 130, 25);
+        lblNewLabel_2.setBounds(19, 359, 130*3, 25);
         lblNewLabel_2.setFont(new Font("Al Bayan", Font.BOLD, 20));
         frame.getContentPane().add(lblNewLabel_2);
 
@@ -149,6 +160,7 @@ public class MainGUI {
         lbl_playersonline = new JLabel("Players online: " + proxyData.getPlayers());
         lbl_playersonline.setBounds(19, 437, 207, 16);
         frame.getContentPane().add(lbl_playersonline);
+
 
         lbl_playersplaying = new JLabel("Players playing: ");
         lbl_playersplaying.setBounds(19, 461, 207, 16);
@@ -177,6 +189,16 @@ public class MainGUI {
                 lbl_port.setText("Port: " + proxyData.getPort());
                 lbl_playersonline.setText("Players online: " + proxyData.getPlayers());
                 lbl_playersplaying.setText("Players playing: ");
+
+                playersplaying = 0;
+                if(Data.serverData.serverCollection.size() != 0) {
+                    for (Server cloudServer : Data.serverData.serverCollection) {
+                        if (cloudServer.getPort() != 9999) {
+                            playersplaying += cloudServer.getPlayerAmount();
+                        }
+                    }
+                    lbl_playersplaying.setText("Players playing: " + playersplaying);
+                }
 
                 defaultListModel.clear();
                 Data.serverData.serverCollection.forEach(server ->

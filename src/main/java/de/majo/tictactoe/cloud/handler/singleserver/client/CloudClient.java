@@ -11,7 +11,9 @@ import org.json.simple.parser.ParseException;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 
 public class CloudClient extends Thread{
@@ -52,8 +54,7 @@ public class CloudClient extends Thread{
                 String input = reader.readLine();
 
                 packetReadHandler(input);
-
-                System.out.println(input);
+                //System.out.println(input);
 
                 if(dataStorageMap.containsKey(input)) {
                     writer.write(dataStorageMap.get(input) + "\n");
@@ -143,7 +144,18 @@ public class CloudClient extends Thread{
                 jsonArrayUser.addAll(cloudServer.getClient_list().values());
                 jsonObject.put("user", jsonArrayUser);
                 jsonObject.put("won", cloudServer.isWon());
-                jsonObject.put("turn", cloudServer.getTurn());
+                if(!cloudServer.isWon()) {
+                    jsonObject.put("playerwon", "-");
+                }else {
+                    //TODO: set player won
+                }
+                if(cloudServer.getClient_list().size() == 2) {
+                    jsonObject.put("turn", cloudServer.getTurn());
+                    jsonObject.put(cloudServer.getClient_list().values().toArray()[0], "X");
+                    jsonObject.put(cloudServer.getClient_list().values().toArray()[1], "O");
+                }else {
+                    jsonObject.put("turn", "-");
+                }
                 dataStorageMap.put("PacketInfoGamestate", jsonObject.toJSONString());
             }
         }
@@ -174,6 +186,16 @@ public class CloudClient extends Thread{
                     if(!jsonStr.contains("REQUESTINFO")) {
                         JSONObject jsonObject = (JSONObject) jsonParser.parse(jsonStr);
                         //String username = (String) jsonObject.get("username");
+
+                        //TODO: change game state here
+                        System.out.println("   ----->> New game change!");
+                        System.out.println(jsonObject.get("gamefield"));
+                        cloudServer.setGameField((List<String>) jsonObject.get("gamefield"));
+                        ArrayList<String> users = new ArrayList<>();
+                        users.addAll(cloudServer.getClient_list().values());
+                        users.remove(cloudServer.getTurn());
+                        cloudServer.setTurn(users.get(0));
+
                         try {
                             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
                             writer.write("PacketInfoGamestate;;;" + dataStorageMap.get("PacketInfoGamestate") + "\n");
