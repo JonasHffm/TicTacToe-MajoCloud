@@ -106,7 +106,7 @@ public class ConnectionHandler {
                 @Override
                 public void run() {
                     if(play_socket != null) {
-                        if (play_socket.isConnected()) {
+                        if (play_socket.isConnected() && !play_socket.isOutputShutdown()) {
                             try {
                                 writer.write("PacketPlayOutChangeGame;;;REQUESTINFO\n");
                                 writer.flush();
@@ -115,10 +115,20 @@ public class ConnectionHandler {
                                 parsePacketData(message);
                                 System.out.println(message);
 
+                                if(Data.gameQuit) {
+                                    writer.close();
+                                    reader.close();
+                                    this.cancel();
+                                }
+
                             } catch (IOException e) {
                                 this.cancel();
                             }
+                        }else {
+                            this.cancel();
                         }
+                    }else {
+                        this.cancel();
                     }
                 }
             }, 0, 100);

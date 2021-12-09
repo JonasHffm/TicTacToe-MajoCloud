@@ -56,6 +56,8 @@ public class CloudClient extends Thread{
                 packetReadHandler(input);
                 //System.out.println(input);
 
+
+
                 if(dataStorageMap.containsKey(input)) {
                     writer.write(dataStorageMap.get(input) + "\n");
                     writer.flush();
@@ -171,11 +173,13 @@ public class CloudClient extends Thread{
                 try {
                     JSONObject jsonObject = (JSONObject) jsonParser.parse(jsonStr);
                     String username = (String) jsonObject.get("username");
-                    System.out.println(" > New client registered as -> " + username + " > [" + cloudServer.getPort() + "]");
-                    cloudServer.getClient_list().put(this, username);
-                    this.username = username;
-                    if(cloudServer.getClient_list().size() >= 2) {
-                        cloudServer.setTurn((String) cloudServer.getClient_list().values().toArray()[new Random().nextInt(2)]);
+                    if(!cloudServer.getClient_list().containsValue(username)) {
+                        System.out.println(" > New client registered as -> " + username + " > [" + cloudServer.getPort() + "]");
+                        cloudServer.getClient_list().put(this, username);
+                        this.username = username;
+                        if (cloudServer.getClient_list().size() >= 2) {
+                            cloudServer.setTurn((String) cloudServer.getClient_list().values().toArray()[new Random().nextInt(2)]);
+                        }
                     }
                 } catch (ParseException e) {
                     e.printStackTrace();
@@ -187,9 +191,10 @@ public class CloudClient extends Thread{
                         JSONObject jsonObject = (JSONObject) jsonParser.parse(jsonStr);
                         //String username = (String) jsonObject.get("username");
 
-                        //TODO: change game state here
-                        System.out.println("   ----->> New game change!");
-                        System.out.println(jsonObject.get("gamefield"));
+                        //debug
+                        //System.out.println("   ----->> New game change!");
+                        //System.out.println(jsonObject.get("gamefield"));
+
                         cloudServer.setGameField((List<String>) jsonObject.get("gamefield"));
                         ArrayList<String> users = new ArrayList<>();
                         users.addAll(cloudServer.getClient_list().values());

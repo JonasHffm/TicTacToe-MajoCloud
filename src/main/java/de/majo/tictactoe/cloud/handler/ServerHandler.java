@@ -23,7 +23,7 @@ public class ServerHandler {
         //starting proxy
         this.proxyServer = new CloudServer(9999, this);
         this.proxyServer.enableProxyMode();
-        this.proxyServer.setMotd("Proxy-Server - Port: " + this.proxyServer.getPort());
+        this.proxyServer.setMotd("Viel Spaß beim Spielen!");
         this.proxyServer.start();
         serverList.add(this.proxyServer);
     }

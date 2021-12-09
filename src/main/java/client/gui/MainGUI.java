@@ -29,6 +29,7 @@ public class MainGUI {
     public static JTextField input_username;
     private ProxyData proxyData;
     private int playersplaying = 0;
+    private Socket client;
 
     private JLabel lbl_motd, lbl_playersplaying, lbl_playersonline, lbl_port;
     private DefaultListModel<String> defaultListModel;
@@ -91,9 +92,8 @@ public class MainGUI {
                         int port = Integer.valueOf(selected.split(" ")[0]);
                         System.out.println(port);
                         try {
-                            Socket socket = new Socket(Data.IP, port);
-                            socket.setKeepAlive(true);
-                            Client.data.getConnectionHandler().setPlay_socket(socket);
+                            client = new Socket(Data.IP, port);
+                            Client.data.getConnectionHandler().setPlay_socket(client);
                             Data.username = input_username.getText();
                             Data.alreadyConnected = true;
 
@@ -101,11 +101,13 @@ public class MainGUI {
                                 @Override
                                 public void run() {
                                     try {
-                                        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+                                        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
                                         JSONObject jsonObject = new JSONObject();
                                         jsonObject.put("username", Data.username);
-                                        writer.write("PacketPlayOutSendUsername;;;" + jsonObject.toJSONString() + "\n");
-                                        writer.flush();
+                                        for(int i = 0; i < 5; i++) {
+                                            writer.write("PacketPlayOutSendUsername;;;" + jsonObject.toJSONString() + "\n");
+                                            writer.flush();
+                                        }
                                     } catch (IOException ioException) {
                                         ioException.printStackTrace();
                                     }
@@ -120,7 +122,7 @@ public class MainGUI {
                                         .start();
                             }
 
-                            GameGUI gameGUI = new GameGUI();
+                            GameGUI gameGUI = new GameGUI(client);
                         } catch (IOException ioException) {
                             JOptionPane.showMessageDialog(frame, "This server is full or offline!");
                         }
@@ -208,4 +210,7 @@ public class MainGUI {
         }, 0, 1000);
     }
 
+    public Socket getClient() {
+        return client;
+    }
 }

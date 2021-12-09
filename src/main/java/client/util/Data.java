@@ -13,6 +13,8 @@ public class Data {
 
     public static String username = "";
 
+    public static boolean gameQuit = false;
+
     public static ProxyData proxyData;
     public static ServerData serverData = new ServerData();
 

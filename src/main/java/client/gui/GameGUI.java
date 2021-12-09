@@ -31,8 +31,22 @@ public class GameGUI {
     private JLabel lbl_turn;
     private JLabel lbl_symboluser;
 
-    public GameGUI() {
+    private Socket client;
+    private BufferedWriter writer;
+
+    public GameGUI(Socket client) {
+        this.client = client;
+        try {
+            writer = new BufferedWriter(
+                    new OutputStreamWriter(
+                            client.getOutputStream()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         initialize();
+
+
 
         EventQueue.invokeLater(() -> {
             try {
@@ -47,6 +61,7 @@ public class GameGUI {
         frame = new JFrame();
         frame.setBounds(100, 100, 600, 600);
         frame.getContentPane().setLayout(null);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         JLabel lbl_a = new JLabel("");
         lbl_a.setFont(new Font("Lucida Grande", Font.PLAIN, 88));
@@ -137,9 +152,6 @@ public class GameGUI {
                         newField.set(key, playserverInfoState.getPlayerSymbols().get(Data.username).toLowerCase(Locale.ROOT));
                         object.put("gamefield", newField);
                         try {
-                            BufferedWriter writer = new BufferedWriter(
-                                    new OutputStreamWriter(
-                                            Client.data.getConnectionHandler().getPlay_socket().getOutputStream()));
                             writer.write("PacketPlayOutChangeGame;;;" + object.toJSONString() + "\n");
                             writer.flush();
                         } catch (IOException ioException) {
@@ -157,9 +169,11 @@ public class GameGUI {
         JButton exit_button = new JButton("Exit");
         exit_button.setBounds(6, 6, 117, 29);
         exit_button.addActionListener(e -> {
-            Socket socket = Client.data.getConnectionHandler().getPlay_socket();
+            System.out.println(client);
+            Data.gameQuit = true;
             try {
-                socket.close();
+                writer.close();
+                client.close();
                 Client.data.getConnectionHandler().setPlay_socket(null);
                 Client.data.getConnectionHandler().setListeningPlayServer(
                         new Thread(Client.data.getConnectionHandler().getOnListenEventPlayServer())
