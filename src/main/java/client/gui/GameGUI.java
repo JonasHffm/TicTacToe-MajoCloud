@@ -3,6 +3,7 @@ package client.gui;
 import client.main.Client;
 import client.util.Data;
 import client.util.PlayserverInfoState;
+import de.majo.tictactoe.cloud.main.Main;
 import org.json.simple.JSONObject;
 
 import javax.swing.*;
@@ -33,6 +34,10 @@ public class GameGUI {
 
     private Socket client;
     private BufferedWriter writer;
+
+    private Timer timer;
+
+    private boolean pressDelay = false;
 
     public GameGUI(Socket client) {
         this.client = client;
@@ -144,24 +149,34 @@ public class GameGUI {
             public void mouseClicked(MouseEvent e) {
                 System.out.println(key);
                 PlayserverInfoState playserverInfoState = Client.data.getConnectionHandler().getPlayserverInfoState();
-                if(playserverInfoState.getTurn().equals(Data.username)) {
-                    if(!label.getText().equals("X") && !label.getText().equals("O")) {
-                        JSONObject object = new JSONObject();
-                        ArrayList<String> newField = new ArrayList<>();
-                        newField.addAll(playserverInfoState.getField());
-                        newField.set(key, playserverInfoState.getPlayerSymbols().get(Data.username).toLowerCase(Locale.ROOT));
-                        object.put("gamefield", newField);
-                        try {
-                            writer.write("PacketPlayOutChangeGame;;;" + object.toJSONString() + "\n");
-                            writer.flush();
-                        } catch (IOException ioException) {
-                            ioException.printStackTrace();
+
+                if(!pressDelay) {
+                    if (playserverInfoState.getTurn().equals(Data.username)) {
+                        if (!label.getText().equals("X") && !label.getText().equals("O")) {
+                            JSONObject object = new JSONObject();
+                            ArrayList<String> newField = new ArrayList<>();
+                            newField.addAll(playserverInfoState.getField());
+                            newField.set(key, playserverInfoState.getPlayerSymbols().get(Data.username).toLowerCase(Locale.ROOT));
+                            object.put("gamefield", newField);
+                            pressDelay = true;
+                            new Timer().schedule(new TimerTask() {
+                                @Override
+                                public void run() {
+                                    pressDelay = false;
+                                }
+                            }, 1000*2);
+                            try {
+                                writer.write("PacketPlayOutChangeGame;;;" + object.toJSONString() + "\n");
+                                writer.flush();
+                            } catch (IOException ioException) {
+                                ioException.printStackTrace();
+                            }
+                        } else {
+                            JOptionPane.showMessageDialog(frame, "That field is already blocked!");
                         }
-                    }else {
-                        JOptionPane.showMessageDialog(frame, "That field is already blocked!");
+                    } else {
+                        JOptionPane.showMessageDialog(frame, "It is not your turn!");
                     }
-                }else {
-                    JOptionPane.showMessageDialog(frame, "It is not your turn!");
                 }
             }
         }));
@@ -172,16 +187,24 @@ public class GameGUI {
             System.out.println(client);
             Data.gameQuit = true;
             try {
+                writer.write("LOGOUT\n");
+                writer.flush();
                 writer.close();
                 client.close();
+                timer.cancel();
+                MainGUI.timer.cancel();
                 Client.data.getConnectionHandler().setPlay_socket(null);
-                Client.data.getConnectionHandler().setListeningPlayServer(
-                        new Thread(Client.data.getConnectionHandler().getOnListenEventPlayServer())
-                );
+                //Client.data.getConnectionHandler().setListeningPlayServer(
+                //        new Thread(Client.data.getConnectionHandler().getOnListenEventPlayServer())
+                //);
                 frame.dispose();
                 Data.alreadyConnected = false;
-            } catch (IOException ioException) {
-                ioException.printStackTrace();
+                Data.gameQuit = false;
+                Client.data = new Data();
+            } catch (IOException ignored) {
+                frame.dispose();
+                Data.alreadyConnected = false;
+                Client.data = new Data();
             }
         });
         frame.getContentPane().add(exit_button);
@@ -220,7 +243,7 @@ public class GameGUI {
 
 
     public void updateGameUI() {
-        Timer timer = new Timer();
+        timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
@@ -231,9 +254,11 @@ public class GameGUI {
                     lbl_turn.setText(playserverInfoState.getTurn());
                     lbl_symboluser.setText(playserverInfoState.getPlayerSymbols().get(playserverInfoState.getTurn()));
                 }else {
-                    lbl_playerone.setText(playserverInfoState.getUser().get(0));
-                    lbl_turn.setText("-");
-                    lbl_playertwo.setText("-");
+                    if(playserverInfoState.getUser().size() >= 1) {
+                        lbl_playerone.setText(playserverInfoState.getUser().get(0));
+                        lbl_turn.setText("-");
+                        lbl_playertwo.setText("-");
+                    }
                 }
 
                 for(int i = 0; i < playserverInfoState.getField().size(); i++) {

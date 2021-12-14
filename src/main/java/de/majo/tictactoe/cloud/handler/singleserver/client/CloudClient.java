@@ -56,17 +56,19 @@ public class CloudClient extends Thread{
                 packetReadHandler(input);
                 //System.out.println(input);
 
-
-
                 if(dataStorageMap.containsKey(input)) {
                     writer.write(dataStorageMap.get(input) + "\n");
                     writer.flush();
                 }
 
-                if(input == null) {
+                if(input == null || input.equals("LOGOUT")) {
                     ConsoleHandler.log(" > Client disconnected! [" + cloudServer.getPort() + "] - UID: " + cloudServer.getUID());
                     client.close();
                     cloudServer.getClient_list().remove(this);
+                    if(cloudServer.isGameRunning()) {
+                        cloudServer.shutdown();
+                        ConsoleHandler.log(" >>> Closing running game! Player quit the game...");
+                    }
                     break;
                 }
 
@@ -145,12 +147,7 @@ public class CloudClient extends Thread{
                 JSONArray jsonArrayUser = new JSONArray();
                 jsonArrayUser.addAll(cloudServer.getClient_list().values());
                 jsonObject.put("user", jsonArrayUser);
-                jsonObject.put("won", cloudServer.isWon());
-                if(!cloudServer.isWon()) {
-                    jsonObject.put("playerwon", "-");
-                }else {
-                    //TODO: set player won
-                }
+                jsonObject.put("won", cloudServer.getWon());
                 if(cloudServer.getClient_list().size() == 2) {
                     jsonObject.put("turn", cloudServer.getTurn());
                     jsonObject.put(cloudServer.getClient_list().values().toArray()[0], "X");
@@ -178,6 +175,7 @@ public class CloudClient extends Thread{
                         cloudServer.getClient_list().put(this, username);
                         this.username = username;
                         if (cloudServer.getClient_list().size() >= 2) {
+                            cloudServer.setGameRunning(true);
                             cloudServer.setTurn((String) cloudServer.getClient_list().values().toArray()[new Random().nextInt(2)]);
                         }
                     }

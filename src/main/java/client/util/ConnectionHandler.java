@@ -131,7 +131,7 @@ public class ConnectionHandler {
                         this.cancel();
                     }
                 }
-            }, 0, 100);
+            }, 0, 10);
         } catch (IOException ignored) {}
 
     };
@@ -203,7 +203,7 @@ public class ConnectionHandler {
                 playserverInfoState.setField((JSONArray)object.get("gamefield"));
                 playserverInfoState.setTurn((String) object.get("turn"));
                 playserverInfoState.setUser((JSONArray)object.get("user"));
-                playserverInfoState.setWon((Boolean) object.get("won"));
+                playserverInfoState.setWon((String) object.get("won"));
                 if(playserverInfoState.getUser().size() == 2) {
                     playserverInfoState.getPlayerSymbols().put(playserverInfoState.getUser().get(0)
                             , (String) object.get(playserverInfoState.getUser().get(0)));

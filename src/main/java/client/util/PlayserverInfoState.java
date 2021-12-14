@@ -8,7 +8,7 @@ public class PlayserverInfoState {
 
     private String turn;
     private ArrayList<String> user;
-    private boolean won;
+    private String won;
     private ArrayList<String> field;
     private Map<String, String> playerSymbols;
 
@@ -32,11 +32,11 @@ public class PlayserverInfoState {
         this.user = user;
     }
 
-    public boolean isWon() {
+    public String isWon() {
         return won;
     }
 
-    public void setWon(boolean won) {
+    public void setWon(String won) {
         this.won = won;
     }
 

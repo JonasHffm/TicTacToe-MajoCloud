@@ -30,6 +30,7 @@ public class MainGUI {
     private ProxyData proxyData;
     private int playersplaying = 0;
     private Socket client;
+    public static Timer timer;
 
     private JLabel lbl_motd, lbl_playersplaying, lbl_playersonline, lbl_port;
     private DefaultListModel<String> defaultListModel;
@@ -90,17 +91,24 @@ public class MainGUI {
 
                     if(!selected.contains("[2/2]")) {
                         int port = Integer.valueOf(selected.split(" ")[0]);
-                        System.out.println(port);
+                        //System.out.println(port);
                         try {
-                            client = new Socket(Data.IP, port);
+                            Socket client = new Socket(Data.IP, port);
+                            setClient(client);
+
+                            System.out.println("Connected to gameserver");
+                            client.setKeepAlive(true);
                             Client.data.getConnectionHandler().setPlay_socket(client);
                             Data.username = input_username.getText();
                             Data.alreadyConnected = true;
+
+                            Client.data.getConnectionHandler().setPlayserverInfoState(new PlayserverInfoState());
 
                             new Timer().schedule(new TimerTask() {
                                 @Override
                                 public void run() {
                                     try {
+                                        System.out.println(client);
                                         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
                                         JSONObject jsonObject = new JSONObject();
                                         jsonObject.put("username", Data.username);
@@ -110,11 +118,10 @@ public class MainGUI {
                                         }
                                     } catch (IOException ioException) {
                                         ioException.printStackTrace();
+                                        System.out.println("Connection broke!");
                                     }
                                 }
-                            }, 1000);
-
-                            Client.data.getConnectionHandler().setPlayserverInfoState(new PlayserverInfoState());
+                            }, 200);
 
                             if(!Client.data.getConnectionHandler().getListeningPlayServer().isAlive()) {
                                 Client.data.getConnectionHandler()
@@ -123,6 +130,8 @@ public class MainGUI {
                             }
 
                             GameGUI gameGUI = new GameGUI(client);
+                            frame.dispose();
+
                         } catch (IOException ioException) {
                             JOptionPane.showMessageDialog(frame, "This server is full or offline!");
                         }
@@ -183,7 +192,7 @@ public class MainGUI {
     }
 
     public void valueUpdater() {
-        Timer timer = new Timer();
+        timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
@@ -212,5 +221,8 @@ public class MainGUI {
 
     public Socket getClient() {
         return client;
+    }
+    public void setClient(Socket client) {
+        this.client = client;
     }
 }

@@ -20,6 +20,7 @@ public class CloudServer extends Thread{
     private final int MAX_CLIENT_ACCEPTION = 2;
 
     private boolean stoped = false;
+    private boolean gameRunning = false;
 
     private ServerHandler serverHandler;
     private CloudServer instance;
@@ -29,7 +30,7 @@ public class CloudServer extends Thread{
     private String motd = "Welcome to the server!";
 
     private List<String> gameField;
-    private boolean won;
+    private String won = "-";
 
     public CloudServer(int port, ServerHandler serverHandler) {
         instance = this;
@@ -77,11 +78,15 @@ public class CloudServer extends Thread{
                         Socket socket = server.accept();
 
                         if(!proxyMode) {
+                            /*
                             if (client_list.size() == 0) {
                                 client_list.put(new CloudClient(socket, instance, "1", serverHandler), "1");
                             } else {
                                 client_list.put(new CloudClient(socket, instance, "2", serverHandler), "2");
                             }
+                            */
+                            String id = UUID.randomUUID().toString();
+                            new CloudClient(socket, instance, id, serverHandler);
                         }else {
                             String id = UUID.randomUUID().toString();
                             client_list.put(new CloudClient(socket, instance, id, serverHandler), id);
@@ -126,6 +131,7 @@ public class CloudServer extends Thread{
                 });
                 try {
                     server.close();
+                    serverHandler.getServerList().remove(instance);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -195,7 +201,7 @@ public class CloudServer extends Thread{
         return gameField;
     }
 
-    public boolean isWon() {
+    public String getWon() {
         return won;
     }
 
@@ -215,4 +221,10 @@ public class CloudServer extends Thread{
         proxyMode = true;
     }
 
+    public void setGameRunning(boolean gameRunning) {
+        this.gameRunning = gameRunning;
+    }
+    public boolean isGameRunning() {
+        return gameRunning;
+    }
 }
