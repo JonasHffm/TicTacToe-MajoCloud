@@ -147,6 +147,10 @@ public class CloudClient extends Thread{
                 JSONArray jsonArrayUser = new JSONArray();
                 jsonArrayUser.addAll(cloudServer.getClient_list().values());
                 jsonObject.put("user", jsonArrayUser);
+
+                //check if player has won!
+
+
                 jsonObject.put("won", cloudServer.getWon());
                 if(cloudServer.getClient_list().size() == 2) {
                     jsonObject.put("turn", cloudServer.getTurn());
